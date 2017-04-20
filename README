@@ -1,0 +1,6 @@
+This is a basic 3d software renderer
+This requires cairo, libavformat,libavcodec,libswscale to build
+(libcairo2-dev,libformat-dev,libavcodec-dev,libswscale-dev on debian)
+
+It can output to png,svg,ps,pdf, and webms(and other libavformat formats)
+

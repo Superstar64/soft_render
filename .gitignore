@@ -1,0 +1,7 @@
+*.svg
+*.png
+*.ps
+*.pdf
+*.o
+*.format
+render
