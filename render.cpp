@@ -493,8 +493,8 @@ void renderWebm(Model model, const char* name, int width, int height, Transform 
 
   for (int i = 0; i < frames; i++) {
     std::copy(model.begin(), model.end(), modelCopy.begin());
-    // cairo_set_source_rgb(context, 0, 0, 0);
-    // cairo_paint(context);
+    cairo_set_source_rgb(context, 0, 0, 0);
+    cairo_paint(context);
     render(context, modelCopy, width, height, transform * Transform::rotateByUpAxis(i * 1.0 / frames * 2 * M_PI), fow, outline, shader);
 
     cairo_surface_flush(surface);
