@@ -300,7 +300,7 @@ void drawWorld(Model model, cairo_t* context, double rightSlope, double upSlope,
 
 // modifies model inplace
 // renders to a cairo context from -1,1 in x and y cordinates
-void render(cairo_t* context, Model model, int width, int height, Transform transform, double fow,bool outline, Shader& shader) {
+void render(cairo_t* context, Model model, int width, int height, Transform transform, double fow, bool outline, Shader& shader) {
   for (auto& triangle : model) {
     for (auto& point : triangle.all()) {
       point = transform.apply(point);
@@ -319,12 +319,12 @@ void transformView(cairo_t* context, int width, int height) {
   cairo_set_line_width(context, 1. / 1000);
 }
 
-void renderSingle(cairo_surface_t* image, Model model, const char* name, int width, int height, Transform transform, double fow,bool outline,Shader& shader) {
+void renderSingle(cairo_surface_t* image, Model model, const char* name, int width, int height, Transform transform, double fow, bool outline, Shader& shader) {
   auto context = cairo_create(image);
 
   transformView(context, width, height);
 
-  render(context, model, width, height, transform, fow, outline,shader);
+  render(context, model, width, height, transform, fow, outline, shader);
 
   cairo_destroy(context);
 }
@@ -478,7 +478,7 @@ struct FFBoilerplate {
   }
 };
 
-void renderWebm(Model model, const char* name, int width, int height, Transform transform, double fow, bool outline,Shader& shader, int frames) {
+void renderWebm(Model model, const char* name, int width, int height, Transform transform, double fow, bool outline, Shader& shader, int frames) {
   auto surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, width, height);
   auto stride = cairo_image_surface_get_stride(surface);
   auto data = cairo_image_surface_get_data(surface);
@@ -493,9 +493,9 @@ void renderWebm(Model model, const char* name, int width, int height, Transform 
 
   for (int i = 0; i < frames; i++) {
     std::copy(model.begin(), model.end(), modelCopy.begin());
-    //cairo_set_source_rgb(context, 0, 0, 0);
-    //cairo_paint(context);
-    render(context, modelCopy, width, height, transform * Transform::rotateByUpAxis(i * 1.0 / frames * 2 * M_PI), fow,outline,shader);
+    // cairo_set_source_rgb(context, 0, 0, 0);
+    // cairo_paint(context);
+    render(context, modelCopy, width, height, transform * Transform::rotateByUpAxis(i * 1.0 / frames * 2 * M_PI), fow, outline, shader);
 
     cairo_surface_flush(surface);
     ffmpeg.send_frame();
@@ -670,7 +670,7 @@ int readInt(const char*& string) {
   return result;
 }
 
-enum class ShaderType {empty,single,flat,guorand};
+enum class ShaderType { empty, single, flat, guorand };
 
 int main(int argc, const char** argv) {
   const char* inputName = nullptr;
@@ -685,7 +685,7 @@ int main(int argc, const char** argv) {
   double red = 1;
   double green = 1;
   double blue = 1;
-  Point light = Point{-1,-1,1};
+  Point light = Point{-1, -1, 1};
   ShaderType shaderType = ShaderType::flat;
   auto selfName = argv[0];
   argc--;
@@ -832,39 +832,39 @@ int main(int argc, const char** argv) {
     fread(&attributes, sizeof(attributes), 1, file);
   }
   fclose(file);
-  
+
   std::unique_ptr<Shader> shaderMemory;
-  if(shaderType == ShaderType::empty){
+  if (shaderType == ShaderType::empty) {
     shaderMemory = decltype(shaderMemory)(new EmptyShader());
-  } else if(shaderType == ShaderType::single){
-    shaderMemory = decltype(shaderMemory)(new SingleColor(red,green,blue));
-  } else if(shaderType == ShaderType::flat){
-    shaderMemory = decltype(shaderMemory)(new FlatShader(red,green,blue,light));
+  } else if (shaderType == ShaderType::single) {
+    shaderMemory = decltype(shaderMemory)(new SingleColor(red, green, blue));
+  } else if (shaderType == ShaderType::flat) {
+    shaderMemory = decltype(shaderMemory)(new FlatShader(red, green, blue, light));
   } else {
-    shaderMemory = decltype(shaderMemory)(new GouraudShader(red,green,blue,light));
+    shaderMemory = decltype(shaderMemory)(new GouraudShader(red, green, blue, light));
   }
   auto& shader = *shaderMemory.get();
-  
+
   auto model = Model{triangles.data(), triangles.size()};
   calculatePointNormals(model);
   if (endsWith(outputName, ".png")) {
     auto image = cairo_image_surface_create(CAIRO_FORMAT_RGB24, width, height);
-    renderSingle(image, model, outputName, width, height, transform, fow,outline,shader);
+    renderSingle(image, model, outputName, width, height, transform, fow, outline, shader);
     cairo_surface_write_to_png(image, outputName);
     cairo_surface_destroy(image);
   } else if (endsWith(outputName, ".svg")) {
     auto image = cairo_svg_surface_create(outputName, width, height);
-    renderSingle(image, model, outputName, width, height, transform, fow,outline,shader);
+    renderSingle(image, model, outputName, width, height, transform, fow, outline, shader);
     cairo_surface_destroy(image);
   } else if (endsWith(outputName, ".ps")) {
     auto image = cairo_ps_surface_create(outputName, width, height);
-    renderSingle(image, model, outputName, width, height, transform, fow,outline,shader);
+    renderSingle(image, model, outputName, width, height, transform, fow, outline, shader);
     cairo_surface_destroy(image);
   } else if (endsWith(outputName, ".pdf")) {
     auto image = cairo_pdf_surface_create(outputName, width, height);
-    renderSingle(image, model, outputName, width, height, transform, fow,outline,shader);
+    renderSingle(image, model, outputName, width, height, transform, fow, outline, shader);
     cairo_surface_destroy(image);
   } else {
-    renderWebm(model, outputName, width, height, transform, fow,outline,shader,frames);
+    renderWebm(model, outputName, width, height, transform, fow, outline, shader, frames);
   }
 }
