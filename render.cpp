@@ -777,7 +777,7 @@ int main(int argc, const char** argv) {
   if (help || inputName == nullptr || outputName == nullptr) {
     printf(
         "%s [options] inputFile.stl outputFile.[png,svg,ps,pdf,webm]\n\
- -h --help            print help message\n\
+    --help            print help message\n\
  -m --move='x y z'    move model to\n\
     --rotate_x='rad'  rotate model by x axis\n\
     --rotate_y='rad'  rotate model by y axis\n\
