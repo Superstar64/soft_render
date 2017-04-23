@@ -623,6 +623,7 @@ void matchSingle(int& argc, const char**& argv, const char*& subset, char inital
         argv++;
         if (argc == 0) {
           fprintf(stderr, "%s expects an argument\n", name);
+          exit(1);
         }
         callLambdaWithArgs<wrap.type>(lambda, argv[0]);
       }
