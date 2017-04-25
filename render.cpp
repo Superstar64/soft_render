@@ -818,7 +818,7 @@ int main(int argc, const char** argv) {
   }
   FILE* file = *inputName == '-' ? stdin : fopen(inputName, "rb");
   if (!file) {
-    perror(argv[1]);
+    perror(inputName);
     return 1;
   }
   char header[80];
