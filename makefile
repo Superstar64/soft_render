@@ -31,7 +31,7 @@ LDFLAGS += -Wl,--gc-sections
 endif
 
 $(APP) : render.o
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 monkey.svg : $(APP) monkey.stl 
 	./$^ $@ -m "0 2 0"

@@ -19,15 +19,16 @@
 
 #include <algorithm>
 #include <memory>
-#include <vector>
 #include <type_traits>
 #include <unordered_map>
+#include <vector>
 
-#include <cairo.h>
-#include <cairo-svg.h>
-#include <cairo-ps.h>
 #include <cairo-pdf.h>
+#include <cairo-ps.h>
+#include <cairo-svg.h>
+#include <cairo.h>
 extern "C" {
+#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 }
@@ -347,23 +348,22 @@ void renderSingle(cairo_surface_t* image, Model model, const char* name, int wid
 // ffmpeg boilerplate
 struct FFBoilerplate {
   AVFormatContext* avformat_context;
-  AVOutputFormat* format;
+  const AVOutputFormat* format;
   AVCodecID codec_id;
-  AVCodec* codec;
+  const AVCodec* codec;
   AVStream* stream;
   AVCodecContext* avcodec_context;
   int status;
   AVFrame* rgb_frame;
   AVFrame* native_frame;
   SwsContext* converter;
-  AVPacket packet;
+  AVPacket* packet;
   int width;
   int height;
 
   FFBoilerplate(const char* name, int width, int height, int stride, void* data, int frames) {
     this->width = width;
     this->height = height;
-    av_register_all();
 
     avformat_alloc_output_context2(&avformat_context, nullptr, nullptr, name);
     if (!avformat_context) {
@@ -456,15 +456,16 @@ struct FFBoilerplate {
       fprintf(stderr, "error encoding video");
       exit(1);
     }
+    packet = av_packet_alloc();
     while (true) {
-      av_init_packet(&packet);
-      status = avcodec_receive_packet(avcodec_context, &packet);
+      status = avcodec_receive_packet(avcodec_context, packet);
       if (status < 0) {
         break;
       }
-      av_packet_rescale_ts(&packet, avcodec_context->time_base, stream->time_base);
-      av_interleaved_write_frame(avformat_context, &packet);
+      av_packet_rescale_ts(packet, avcodec_context->time_base, stream->time_base);
+      av_interleaved_write_frame(avformat_context, packet);
     }
+    av_packet_unref(packet);
   }
 
   void send_frame() {
@@ -507,6 +508,7 @@ void renderWebm(Model model, const char* name, int width, int height, Transform 
   Model modelCopy{modelCopyMemory.data(), modelCopyMemory.size()};
 
   for (int i = 0; i < frames; i++) {
+    printf("Rendering Frame: %i\n", i);
     std::copy(model.begin(), model.end(), modelCopy.begin());
     cairo_set_source_rgb(context, 0, 0, 0);
     cairo_paint(context);
@@ -706,8 +708,9 @@ int main(int argc, const char** argv) {
   auto selfName = argv[0];
   argc--;
   argv++;
-  parseArgs(argc, argv,
-            // clang-format off
+  parseArgs(
+      argc, argv,
+      // clang-format off
   '\0', "help", Wrap<ArgType::flag>(), [&help] { help = true; }, 'm', "move", Wrap<ArgType::reader>(),
   [&transform](const char* string) {
     transform = Transform::move(Point{readDouble(string), readDouble(string), readDouble(string)}) * transform;
